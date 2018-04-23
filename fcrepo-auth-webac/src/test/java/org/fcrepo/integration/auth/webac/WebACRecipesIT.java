@@ -160,7 +160,6 @@ public class WebACRecipesIT extends AbstractResourceIT {
     }
 
     @Test
-    @Ignore("Until WebACAuthorizingRealm is complete: https://jira.duraspace.org/browse/FCREPO-2760")
     public void scenario1() throws IOException {
         final String testObj = ingestObj("/rest/webacl_box1");
         final String acl1 = ingestAcl("fedoraAdmin", "/acls/01/acl.ttl", "/acls/01/authorization.ttl");
