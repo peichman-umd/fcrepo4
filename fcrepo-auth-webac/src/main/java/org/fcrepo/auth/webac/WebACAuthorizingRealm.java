@@ -117,7 +117,7 @@ public class WebACAuthorizingRealm extends AuthorizingRealm {
 
             // for non-admins, we must check the ACL for the requested resource
             // convert the request URI to a JCR node
-            final String requestURI = request.getRequestURI();
+            final String requestURI = request.getPathInfo();
             final FedoraResource fedoraResource = getResourceOrParentFromPath(requestURI);
 
             if (fedoraResource != null) {

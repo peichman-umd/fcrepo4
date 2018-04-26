@@ -93,7 +93,7 @@ public class WebACFilter implements Filter {
     }
 
     private boolean isAuthorized(final Subject currentUser, final HttpServletRequest httpRequest) {
-        final URI requestURI = URI.create(httpRequest.getRequestURL().toString());
+        final URI requestURI = URI.create(httpRequest.getPathInfo());
         switch (httpRequest.getMethod()) {
         case "GET":
             return currentUser.isPermitted(new WebACPermission(WEBAC_MODE_READ, requestURI));
