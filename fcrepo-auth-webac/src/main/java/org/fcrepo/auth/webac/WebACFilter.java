@@ -19,17 +19,18 @@ package org.fcrepo.auth.webac;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static org.apache.jena.riot.WebContent.contentTypeSPARQLUpdate;
 import static org.fcrepo.auth.common.ServletContainerAuthFilter.FEDORA_ADMIN_ROLE;
 import static org.fcrepo.auth.common.ServletContainerAuthFilter.FEDORA_USER_ROLE;
-import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_READ;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_APPEND;
+import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_READ;
 import static org.fcrepo.auth.webac.URIConstants.WEBAC_MODE_WRITE;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.apache.jena.riot.WebContent.contentTypeSPARQLUpdate;
 
 import java.io.IOException;
 import java.net.URI;
 
+import javax.inject.Inject;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -46,6 +47,10 @@ import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateRequest;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.fcrepo.http.api.FedoraLdp;
+import org.fcrepo.http.commons.session.SessionFactory;
+import org.fcrepo.kernel.api.models.FedoraBinary;
+import org.fcrepo.kernel.api.models.FedoraResource;
 import org.slf4j.Logger;
 
 /**
@@ -54,6 +59,11 @@ import org.slf4j.Logger;
 public class WebACFilter implements Filter {
 
     private static final Logger log = getLogger(WebACFilter.class);
+
+    private FedoraResource resource;
+
+    @Inject
+    private SessionFactory sessionFactory;
 
     @Override
     public void init(final FilterConfig filterConfig) throws ServletException {
@@ -106,21 +116,50 @@ public class WebACFilter implements Filter {
         // this method intentionally left empty
     }
 
+    public FedoraResource resource(URI requestURI) {
+        // XXX: throws NPE since sessionFactory is null
+        // FedoraSession session = sessionFactory.getInternalSession();
+        if (resource == null) {
+            resource = new FedoraLdp().getResourceFromPath(requestURI.toString());
+        }
+        return resource;
+    }
+
     private boolean isAuthorized(final Subject currentUser, final HttpServletRequest httpRequest) throws IOException {
         final URI requestURI = URI.create(httpRequest.getRequestURL().toString());
         log.debug("Request URI is {}", requestURI);
+
+        // WebAC permissions
+        final WebACPermission toRead = new WebACPermission(WEBAC_MODE_READ, requestURI);
+        final WebACPermission toWrite = new WebACPermission(WEBAC_MODE_WRITE, requestURI);
+        final WebACPermission toAppend = new WebACPermission(WEBAC_MODE_APPEND, requestURI);
+
         switch (httpRequest.getMethod()) {
         case "GET":
-            return currentUser.isPermitted(new WebACPermission(WEBAC_MODE_READ, requestURI));
+            return currentUser.isPermitted(toRead);
         case "PUT":
+            return currentUser.isPermitted(toWrite);
         case "POST":
-        case "DELETE":
-            return currentUser.isPermitted(new WebACPermission(WEBAC_MODE_WRITE, requestURI));
-        case "PATCH":
-            if (currentUser.isPermitted(new WebACPermission(WEBAC_MODE_WRITE, requestURI))) {
+            if (currentUser.isPermitted(toWrite)) {
                 return true;
             } else {
-                if (currentUser.isPermitted(new WebACPermission(WEBAC_MODE_APPEND, requestURI))) {
+                if (resource(requestURI) instanceof FedoraBinary) {
+                    // LDP-NR
+                    // user without the acl:Write permission cannot POST to binaries
+                    return false;
+                } else {
+                    // LDP-RS
+                    // user with the acl:Append permission may POST to containers
+                    return currentUser.isPermitted(toAppend);
+                }
+            }
+        case "DELETE":
+            return currentUser.isPermitted(toWrite);
+        case "PATCH":
+            if (currentUser.isPermitted(toWrite)) {
+                return true;
+            } else {
+                if (currentUser.isPermitted(toAppend)) {
                     return isPatchContentPermitted(httpRequest);
                 }
             }
