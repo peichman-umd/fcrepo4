@@ -9,7 +9,7 @@
     <!-- Shiro config -->
   
   <bean id="testAuthFilter" class="org.fcrepo.http.commons.test.util.TestAuthenticationRequestFilter"/>
-  <bean id="webACFilter" class="org.fcrepo.auth.webac.WebACFilter" depends-on="sessionFactory,nodeService"/>
+  <bean id="webACFilter" class="org.fcrepo.auth.webac.WebACFilter"/>
   <bean id="servletAuthFilter" class="org.fcrepo.auth.common.ServletContainerAuthFilter"/>
   
   <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">

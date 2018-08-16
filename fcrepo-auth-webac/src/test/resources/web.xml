@@ -12,21 +12,21 @@
         <param-value>classpath:spring-test/master.xml</param-value>
     </context-param>
 
-    <listener>
-        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-    </listener>
-    
     <context-param>
       <param-name>shiroEnvironmentClass</param-name>
       <param-value>org.apache.shiro.web.env.DefaultWebEnvironment</param-value>
     </context-param>
-    
+
     <listener>
         <listener-class>org.apache.shiro.web.env.EnvironmentLoaderListener</listener-class>
     </listener>
-    
+
     <listener>
       <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+    </listener>
+
+    <listener>
+      <listener-class>org.fcrepo.http.commons.FedoraContextLoaderListener</listener-class>
     </listener>
 
   <servlet>
@@ -54,10 +54,6 @@
 			<param-name>targetFilterLifecycle</param-name>
 			<param-value>true</param-value>
 	    </init-param>
-	    <init-param>
-			<param-name>targetBeanName</param-name>
-			<param-value>shiroFilter</param-value>
-		</init-param>
 	</filter>
     
 	<!-- Make sure any request you want accessible to Shiro is filtered. /* 
