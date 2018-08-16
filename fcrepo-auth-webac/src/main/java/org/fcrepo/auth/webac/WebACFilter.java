@@ -47,10 +47,11 @@ import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateRequest;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
-import org.fcrepo.http.api.FedoraLdp;
 import org.fcrepo.http.commons.session.SessionFactory;
+import org.fcrepo.kernel.api.FedoraSession;
 import org.fcrepo.kernel.api.models.FedoraBinary;
 import org.fcrepo.kernel.api.models.FedoraResource;
+import org.fcrepo.kernel.api.services.NodeService;
 import org.slf4j.Logger;
 
 /**
@@ -61,6 +62,9 @@ public class WebACFilter implements Filter {
     private static final Logger log = getLogger(WebACFilter.class);
 
     private FedoraResource resource;
+
+    @Inject
+    private NodeService nodeService;
 
     @Inject
     private SessionFactory sessionFactory;
@@ -118,9 +122,9 @@ public class WebACFilter implements Filter {
 
     public FedoraResource resource(URI requestURI) {
         // XXX: throws NPE since sessionFactory is null
-        // FedoraSession session = sessionFactory.getInternalSession();
         if (resource == null) {
-            resource = new FedoraLdp().getResourceFromPath(requestURI.toString());
+            FedoraSession session = sessionFactory.getInternalSession();
+            resource = nodeService.find(session, requestURI.toString());
         }
         return resource;
     }

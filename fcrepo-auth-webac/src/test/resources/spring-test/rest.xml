@@ -12,7 +12,8 @@
       as well as some utility gear. -->
   <context:annotation-config/>
 
-  <bean class="org.fcrepo.http.commons.session.SessionFactory"/>
+  <bean id="sessionFactory" class="org.fcrepo.http.commons.session.SessionFactory"/>
+  <bean id="nodeService" class="org.fcrepo.kernel.modeshape.services.NodeServiceImpl"/>
 
   <!-- Identifier translation chain -->
   <util:list id="translationChain" value-type="org.fcrepo.kernel.api.identifiers.InternalIdentifierConverter">
