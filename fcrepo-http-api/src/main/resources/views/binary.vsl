@@ -51,6 +51,9 @@
                 </div>
             </div>
 
+            #set($mainSubject = $contentNode)
+            #parse("views/common-other-resources.vsl")
+            
         </div>
 
 

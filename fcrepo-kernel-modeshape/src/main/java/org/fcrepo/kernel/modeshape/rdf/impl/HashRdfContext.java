@@ -30,6 +30,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static org.apache.jena.vocabulary.RDF.type;
+import static org.fcrepo.kernel.api.FedoraTypes.FEDORA_NON_RDF_SOURCE_DESCRIPTION;
 import static org.fcrepo.kernel.api.RdfLexicon.isManagedNamespace;
 import static org.fcrepo.kernel.api.RequiredRdfContext.PROPERTIES;
 import static org.fcrepo.kernel.modeshape.identifiers.NodeResourceConverter.nodeConverter;
@@ -69,7 +70,14 @@ public class HashRdfContext extends NodeRdfContext {
     @SuppressWarnings("unchecked")
     private static Stream<Node> getNodeStream(final FedoraResource resource) throws RepositoryException {
         final Node node = getJcrNode(resource);
-        if (node.hasNode("#")) {
+        // special case for binaries, when we are retrieving their descriptions
+        if (resource.hasType(FEDORA_NON_RDF_SOURCE_DESCRIPTION)) {
+            // get hash URI children of the binary itself
+            final Node parent = node.getParent();
+            if (parent.hasNode("#")) {
+                return iteratorToStream(parent.getNode("#").getNodes());
+            }
+        } else if (node.hasNode("#")) {
             return iteratorToStream(node.getNode("#").getNodes());
         }
         return Stream.empty();

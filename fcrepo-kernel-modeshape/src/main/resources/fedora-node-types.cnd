@@ -49,6 +49,7 @@
 + fedora:description (nt:hierarchyNode) =fedora:NonRdfSourceDescription
 + jcr:content (nt:base)
 + fedora:acl (nt:folder) =webac:Acl
++ # (nt:folder)
 
 [nt:leafNode] > nt:hierarchyNode
 + fedora:timemap (nt:folder) =fedora:TimeMap
